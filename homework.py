@@ -25,7 +25,6 @@ class Calculator():
     get_today_stats() - суточная сумма всех трат или съеденных каллорий
     get_week_stats() - недельная сумма всех трат или съеденных каллорий.
     """
-    today = dt.date.today()
 
     def __init__(self, limit) -> None:
         self.limit = limit
@@ -35,20 +34,16 @@ class Calculator():
         self.records.append(record)
 
     def get_today_stats(self):
-        today_stat = []
-        for record in self.records:
-            if record.date == Calculator.today:
-                today_stat.append(record.amount)
-        today_amount = sum(today_stat)
+        today = dt.date.today()
+        today_amount = sum(record.amount for record in self.records
+                           if record.date == today)
         return today_amount
 
     def get_week_stats(self):
-        week_stat = []
-        week = Calculator.today - dt.timedelta(days=7)
-        for record in self.records:
-            if week < record.date and record.date <= self.today:
-                week_stat.append(record.amount)
-        week_amount = sum(week_stat)
+        today = dt.date.today()
+        week = today - dt.timedelta(days=7)
+        week_amount = sum(record.amount for record in self.records
+                          if week < record.date <= today)
         return week_amount
 
     def get_balance(self):
@@ -65,27 +60,21 @@ class CashCalculator(Calculator):
     USD_RATE: float = 73.70
     RUB_RATE: float = 1
 
-    def __init__(self, limit) -> None:
-        super().__init__(limit)
-
     def get_today_cash_remained(self, currency):
         currences = {'eur': ('Euro', CashCalculator.EURO_RATE),
                      'usd': ('USD', CashCalculator.USD_RATE),
                      'rub': ('руб', CashCalculator.RUB_RATE)}
-        name, rate = currences[currency]
         if currency not in currences:
             return 'Неверный формат валюты'
-        cash_left = round(Calculator.get_balance(self) / rate, 2)
+        name, rate = currences[currency]
+        cash_left = round(self.get_balance() / rate, 2)
         if cash_left > 0:
-            alert = f'На сегодня осталось {cash_left} {name}'
-            return alert
+            return f'На сегодня осталось {cash_left} {name}'
         if cash_left < 0:
             cash_left = abs(cash_left)
-            alert = (f'Денег нет, держись: твой долг - '
-                     f'{cash_left} {name}')
-            return alert
-        if cash_left == 0:
-            return 'Денег нет, держись'
+            return (f'Денег нет, держись: твой долг - '
+                    f'{cash_left} {name}')
+        return 'Денег нет, держись'
 
 
 class CaloriesCalculator(Calculator):
@@ -95,7 +84,7 @@ class CaloriesCalculator(Calculator):
     """
 
     def get_calories_remained(self):
-        calories_left = Calculator.get_balance(self)
+        calories_left = self.get_balance()
         if calories_left > 0:
             return (f'Сегодня можно съесть что-нибудь ещё, но с общей '
                     f'калорийностью не более {calories_left} кКал')
