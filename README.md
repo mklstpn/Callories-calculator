@@ -1,2 +1,3 @@
-# hw_python_oop
-Sprint 2. Итоговый проект.
+# Callories calculator
+
+#### Just another learning project whitch calculate moneys and callories
